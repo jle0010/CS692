@@ -1,0 +1,146 @@
+<html>
+<style>
+table, th, td {
+    border: 1px solid black;
+    text-align: left;
+}
+</style>
+<body>
+<h1 id="myHeader"> Welcome to Acme Services!</h1>
+<p> Please place your order below: </p>
+    <form id = "myform">
+        <input type="number" name="bunnyRabbit" min = "0"> Bunny Rabbit Toy<br>
+        <input type="number" name="easterEgg" min = "0"> Toy Easter Egg<br>
+        <input type="number" name="easterBasket" min = "0"> Easter Basket<br>
+        <input type="checkbox" name="grouping" value = "groupItems" id="groupItems"/> Group Items <br><br>
+        <input type="date" name="requestedDate" id = "requestedDate">
+        <input type="time" name="requestedTime" id = "requestedTime">
+        <br><br>
+        <button type = "button"  onclick = "doAJAXstuff(this.form)">
+            Submit Order
+        </button>
+    </form>
+<table id = "orderTable">
+  <tr>
+    <th>Order Number</th>
+    <th>Time Submitted</th>
+    <th width = 100px>Items</th>
+    <th width = 450px>Status</th>
+  </tr>
+</table>
+<script type = "text/javascript">
+    var orderCount = 0;
+    function doAJAXstuff(theform)
+    {
+        // Check if we have enough data to place an order
+        if (theform.requestedDate.value == "" || theform.requestedTime.value == "")
+        {
+            alert("Time or date invalid.");
+            exit();
+        }
+        else if (theform.bunnyRabbit.value == "0" && theform.easterEgg.value == "0" && theform.easterBasket.value == "0")
+        {
+            alert("Not enough items selected.");
+            exit();
+        }
+        orderCount++;
+
+        // Create new row of data (new order)
+        var table = document.getElementById("orderTable");
+        var row = table.insertRow(orderCount);
+        var orderNum = row.insertCell(0);
+        var time = row.insertCell(1);
+        var items = row.insertCell(2);
+        var status = row.insertCell(3);
+
+        orderNum.innerHTML = orderCount;
+        time.innerHTML = theform.requestedDate.value + " " + theform.requestedTime.value;
+        items.innerHTML = theform.bunnyRabbit.value + " rabbit(s) <br>" + theform.easterEgg.value + " egg(s) <br>" + theform.easterBasket.value + " basket(s) <br>";
+        // Status only updated as responds from php server come back
+
+        if (parseInt(theform.bunnyRabbit.value) > 0)
+        {
+            // ACME only order
+            status.innerHTML += "Order issued to ACME for Easter Basket<br>";
+        }
+        if (parseInt(theform.easterEgg.value) > 0)
+        {
+
+            requestLittle = new XMLHttpRequest();
+
+
+            requestLittle.open("GET","littleStuffServer.php?mydata="+orderCount, true);
+
+
+            // After the server gets back with us
+            requestLittle.onreadystatechange = function ()
+            {
+                if (requestLittle.readyState == 4)
+                    my_callbackLittle();
+            }
+            status.innerHTML += "Order issued to LittleStuff for Easter Egg<br>";
+            requestLittle.send();
+
+
+        }
+        if (parseInt(theform.easterBasket.value) > 0)
+        {
+            requestBig = new XMLHttpRequest();
+            requestBig.open("GET","bigStuffServer.php?mydata="+orderCount, false);
+            requestBig.onreadystatechange = function ()
+            {
+                if (requestBig.readyState == 4)
+                    my_callbackBig();
+            }
+            status.innerHTML += "Order issued to BigStuff for Easter Basket<br>";
+            requestBig.send();
+
+        }
+
+
+    }
+    function my_callbackLittle()
+    {
+        if (requestLittle.status == 200)
+        {
+            var table = document.getElementById("orderTable");
+
+            var minutes = parseInt(requestLittle.responseText) / 100;
+            var time = minutesToString(minutes);
+
+            table.rows[orderCount].cells[3].innerHTML += "Order Delivered To Customer by LittleStuff in " + time + "<br>";
+
+        }
+        else if (request.status=404)
+        {
+            alert("Server was not found: data returned is :\n"+requestLittle.responseText);
+        }
+    }
+    function my_callbackBig()
+    {
+        if (requestBig.status == 200)
+        {
+            var table = document.getElementById("orderTable");
+
+            var minutes = parseInt(requestBig.responseText) / 100;
+            var time = minutes + " minutes";
+
+            table.rows[orderCount].cells[3].innerHTML += "Order Delivered To Customer by BigStuff in " + time + "<br>";
+        }
+        else if (request.status=404)
+        {
+            alert("Server was not found: data returned is :\n"+requestBig.responseText);
+        }
+    }
+    function minutesToString(minutes)
+    {
+
+        var numdays = Math.floor(minutes / 1440);
+        var numhours = Math.floor((minutes % 1440) / 60);
+        var numminutes = Math.floor((minutes % 1440) % 60);
+        return numdays + " days " + numhours + " hours " + numminutes + " minutes ";
+
+    }
+</script>
+</body>
+</html>
