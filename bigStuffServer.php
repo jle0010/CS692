@@ -1,5 +1,5 @@
 <?php
-  $mydata = filter_var($_GET["mydata"], FILTER_SANITIZE_STRING);
+  $mydata = filter_var($HTTP_GET_VARS["mydata"], FILTER_SANITIZE_STRING);
   $rando = rand(500, 6000);
   usleep($rando);
   echo "$rando";
